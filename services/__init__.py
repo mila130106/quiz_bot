@@ -1,6 +1,6 @@
 """Services package"""
-from .database import (
-    init_db,
+from .database import init_db
+from .db_operations import (
     save_quiz_to_db,
     get_all_quizzes,
     get_quiz_questions,

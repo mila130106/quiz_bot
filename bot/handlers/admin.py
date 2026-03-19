@@ -22,7 +22,7 @@ router = Router()
 @router.message(Command("new_quiz"), StateFilter("*"))
 async def start_ai_gen(message: Message, state: FSMContext):
     """Handler for /new_quiz command - starts AI quiz generation"""
-    if is_admin(message.from_user.id):
+    if message.from_user and is_admin(message.from_user.id):
         await state.clear()
         await message.answer("Введіть тему для генерації квізу за допомогою AI:", reply_markup=get_remove_keyboard())
         await state.set_state(QuizForm.waiting_for_topic)
@@ -44,15 +44,19 @@ async def handle_topic(message: Message, state: FSMContext):
         await msg.edit_text("Помилка: AI сервіс недоступний.")
 
     await state.clear()
-    user_is_admin = is_admin(message.from_user.id)
+    user_is_admin = is_admin(message.from_user.id) if message.from_user else False
     await message.answer("Повертаємося до головного меню.", reply_markup=get_main_menu(user_is_admin))
 
 
 @router.message(Command("add_admin"))
 async def cmd_add_admin(message: Message):
     """Handler for /add_admin command - promotes user to admin"""
-    if not is_admin(message.from_user.id):
+    if not message.from_user or not is_admin(message.from_user.id):
         await message.answer("Доступ заборонено. Необхідні права адміністратора.")
+        return
+
+    if not message.text:
+        await message.answer("Використання: /add_admin [user_id]\nПриклад: /add_admin 123456789")
         return
 
     parts = message.text.split()
@@ -76,8 +80,12 @@ async def cmd_add_admin(message: Message):
 @router.message(Command("remove_admin"))
 async def cmd_remove_admin(message: Message):
     """Handler for /remove_admin command - demotes admin to user"""
-    if not is_admin(message.from_user.id):
+    if not message.from_user or not is_admin(message.from_user.id):
         await message.answer("Доступ заборонено. Необхідні права адміністратора.")
+        return
+
+    if not message.text:
+        await message.answer("Використання: /remove_admin [user_id]\nПриклад: /remove_admin 123456789")
         return
 
     parts = message.text.split()
@@ -101,8 +109,12 @@ async def cmd_remove_admin(message: Message):
 @router.message(Command("delete_quiz"))
 async def cmd_delete_quiz(message: Message):
     """Handler for /delete_quiz command - deletes a quiz"""
-    if not is_admin(message.from_user.id):
+    if not message.from_user or not is_admin(message.from_user.id):
         await message.answer("Доступ заборонено. Необхідні права адміністратора.")
+        return
+
+    if not message.text:
+        await message.answer("Використання: /delete_quiz [quiz_id]\nПриклад: /delete_quiz 5")
         return
 
     parts = message.text.split()
@@ -121,7 +133,7 @@ async def cmd_delete_quiz(message: Message):
 @router.message(Command("users"))
 async def cmd_users(message: Message):
     """Handler for /users command - shows all registered users"""
-    if not is_admin(message.from_user.id):
+    if not message.from_user or not is_admin(message.from_user.id):
         await message.answer("Доступ заборонено. Необхідні права адміністратора.")
         return
 
