@@ -14,11 +14,17 @@ from services import init_db
 
 async def main():
     """Main function to start the bot"""
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+
     # Initialize database
     init_db()
     logging.info("Database initialized")
 
     # Initialize bot and dispatcher
+    assert TELEGRAM_BOT_TOKEN is not None, "TELEGRAM_BOT_TOKEN is not set"
     bot = Bot(token=TELEGRAM_BOT_TOKEN)
     dp = Dispatcher(storage=MemoryStorage())
 
@@ -27,10 +33,6 @@ async def main():
     dp.include_router(admin.router)
 
     # Start polling
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    )
     logging.info("Starting Quiz Bot...")
 
     try:

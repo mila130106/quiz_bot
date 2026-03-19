@@ -1,13 +1,12 @@
 import g4f
 import json
-import asyncio
 
-async def generate_quiz_ai(topic):
+def generate_quiz_ai(topic):
     prompt = f"Згенеруй професійний IT квіз про '{topic}' українською мовою. Поверни ТІЛЬКИ JSON масив: [{{'question': '...', 'options': ['A', 'B', 'C', 'D'], 'answer': 'A'}}]. Рівно 3 питання. Відповіді мають бути короткими та зрозумілими українською."
 
     try:
-        response = await g4f.ChatCompletion.create_async( model=g4f.models.default, messages=[{"role": "user", "content": prompt}],)
-        text = response.replace("```json", "").replace("```", "").strip()
+        response = g4f.ChatCompletion.create(model=g4f.models.default, messages=[{"role": "user", "content": prompt}])
+        text = str(response).replace("```json", "").replace("```", "").strip()
         start = text.find('[')
         end = text.rfind(']') + 1
         return json.loads(text[start:end])

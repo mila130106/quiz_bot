@@ -1,4 +1,4 @@
-from db_operations import save_quiz_to_db
+from services.db_operations import save_quiz_to_db
 
 final_quizzes = [
     {

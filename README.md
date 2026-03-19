@@ -33,56 +33,107 @@ quiz_bot/
 └── README.md            # Документація
 ```
 
-## Встановлення та налаштування
+## Повний setup бота (з нуля)
 
-### 1. Клонування репозиторію
+### 1) Передумови
+
+- Python **3.10+** (рекомендовано)
+- `pip`
+- Telegram акаунт
+
+Перевірка:
+
+```bash
+python --version
+pip --version
+```
+
+### 2) Клонування проєкту
 
 ```bash
 git clone <repository-url>
 cd quiz_bot
 ```
 
-### 2. Встановлення залежностей
+### 3) Створення та активація віртуального оточення
+
+**Windows (PowerShell):**
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+**Linux / macOS:**
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### 4) Встановлення залежностей
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 3. Налаштування змінних середовища
+### 5) Налаштування `.env`
 
-Створіть файл `.env` на основі `.env.example`:
+Створіть `.env` на основі шаблону:
 
+**Windows (PowerShell):**
+```powershell
+Copy-Item .env.example .env
+```
+
+**Linux / macOS:**
 ```bash
 cp .env.example .env
 ```
 
-Відредагуйте `.env` файл:
+Заповніть значення:
 
 ```env
-TELEGRAM_BOT_TOKEN=your_bot_token_from_botfather
-ADMIN_ID=your_telegram_user_id
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
+ADMIN_ID=your_telegram_admin_id_here
 ```
 
-#### Як отримати токен бота:
-1. Знайдіть [@BotFather](https://t.me/botfather) в Telegram
-2. Надішліть команду `/newbot`
-3. Слідуйте інструкціям та отримайте токен
+#### Де взяти значення:
+- `TELEGRAM_BOT_TOKEN`: створіть бота через [@BotFather](https://t.me/botfather) (`/newbot`).
+- `ADMIN_ID`: ваш Telegram user ID (наприклад через [@userinfobot](https://t.me/userinfobot)).
 
-#### Як дізнатися свій Telegram ID:
-1. Знайдіть [@userinfobot](https://t.me/userinfobot) в Telegram
-2. Надішліть `/start` та отримайте свій ID
-
-### 4. Ініціалізація бази даних
+### 6) Ініціалізація бази даних
 
 ```bash
-python database.py
+python -m scripts.init_db
 ```
 
-### 5. Запуск бота
+### 7) (Опційно) Заповнення БД тестовими квізами
+
+```bash
+python -m scripts.add_manual
+```
+
+### 8) Запуск бота
 
 ```bash
 python main.py
 ```
+
+Після запуску відкрийте бота в Telegram і надішліть `/start`.
+
+### 9) Швидка перевірка після запуску
+
+1. `/start` — реєстрація користувача.
+2. `/list` — перегляд доступних квізів.
+3. Для адміністратора: `/new_quiz`, `/users`, `/delete_quiz [id]`.
+
+### 10) Типові проблеми
+
+- **`TELEGRAM_BOT_TOKEN not found in .env file`**  
+  Перевірте, що `.env` існує в корені проєкту і містить коректний токен.
+- **`ADMIN_ID not found in .env file`**  
+  Вкажіть числовий Telegram ID без лапок.
+- **Помилки імпортів у scripts**  
+  Запускайте скрипти як модулі: `python -m scripts.init_db` / `python -m scripts.add_manual`.
 
 ## Використання бота
 
@@ -166,10 +217,10 @@ __pycache__/
 
 ### Додавання квізів вручну
 
-Використовуйте скрипт `add_manual.py` для додавання квізів без AI:
+Використовуйте скрипт `scripts.add_manual` для додавання квізів без AI:
 
 ```bash
-python add_manual.py
+python -m scripts.add_manual
 ```
 
 ## Автори

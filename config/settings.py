@@ -10,7 +10,8 @@ load_dotenv()
 
 # Bot configuration
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-ADMIN_ID = int(os.getenv("ADMIN_ID"))
+_admin_id_raw = os.getenv("ADMIN_ID")
+ADMIN_ID = int(_admin_id_raw) if _admin_id_raw else None
 
 # Database configuration
 DATABASE_PATH = "quiz_system.db"

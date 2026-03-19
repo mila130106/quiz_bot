@@ -2,6 +2,7 @@
 User command handlers for Quiz Bot
 Handles commands available to all users
 """
+import logging
 from aiogram import F, Router
 from aiogram.filters import Command, StateFilter
 from aiogram.types import Message
@@ -17,13 +18,19 @@ from services import (
 from config import ADMIN_ID
 
 router = Router()
+logger = logging.getLogger(__name__)
 
 
 @router.message(Command("start"), StateFilter("*"))
 async def cmd_start(message: Message, state: FSMContext):
     """Handler for /start command - registers user and shows main menu"""
     await state.clear()
+    if not message.from_user:
+        logger.warning("Start command without from_user")
+        await message.answer("Помилка: неможливо визначити користувача.")
+        return
     user_id = message.from_user.id
+    logger.info("User %s started bot", user_id)
 
     # Auto-register user if not in DB
     if get_user_role(user_id) is None:
@@ -43,7 +50,8 @@ async def cmd_start(message: Message, state: FSMContext):
 async def cmd_list(message: Message, state: FSMContext):
     """Handler for /list command - shows available quizzes"""
     await state.clear()
-    user_is_admin = is_admin(message.from_user.id)
+    user_is_admin = is_admin(message.from_user.id) if message.from_user else False
+    logger.info("User %s requested quiz list", message.from_user.id if message.from_user else "unknown")
     quizzes = get_all_quizzes()
     if not quizzes:
         await message.answer("База даних порожня. Використовуйте /new_quiz для створення контенту.", reply_markup=get_main_menu(user_is_admin))
@@ -60,7 +68,9 @@ async def cmd_list(message: Message, state: FSMContext):
 @router.message(F.text.isdigit(), StateFilter(None))
 async def start_quiz(message: Message, state: FSMContext):
     """Handler for starting a quiz by ID"""
-    quiz_id = int(message.text)
+    text = message.text or ""
+    quiz_id = int(text)
+    logger.info("User %s started quiz %s", message.from_user.id if message.from_user else "unknown", quiz_id)
     questions = get_quiz_questions(quiz_id)
     if not questions:
         await message.answer("Помилка: невірний ID або порожній квіз.")
@@ -78,7 +88,7 @@ async def send_next_question(message: Message, state: FSMContext):
 
     if idx >= len(questions):
         final_score = data.get('score', 0)
-        user_is_admin = is_admin(message.from_user.id)
+        user_is_admin = is_admin(message.from_user.id) if message.from_user else False
         await message.answer(
             f"🏁 **Підсумок тестування**\nБали: {final_score} / {len(questions)}\nТестування завершено.",
             reply_markup=get_main_menu(user_is_admin)
@@ -96,6 +106,7 @@ async def send_next_question(message: Message, state: FSMContext):
 async def process_quiz_answer(message: Message, state: FSMContext):
     """Handler for quiz answer processing"""
     if message.text in ["/list", "/new_quiz", "🔙 Головне меню"]:
+        logger.info("User %s interrupted quiz flow with %s", message.from_user.id if message.from_user else "unknown", message.text)
         await state.clear()
         return
 
@@ -105,12 +116,14 @@ async def process_quiz_answer(message: Message, state: FSMContext):
     score = data.get('score', 0)
 
     q_id = questions[idx][0]
-    is_correct = check_answer(q_id, message.text)
+    is_correct = check_answer(q_id, message.text or "")
 
     if is_correct:
+        logger.info("User %s answered question %s correctly", message.from_user.id if message.from_user else "unknown", q_id)
         await message.answer("Результат: Правильна відповідь.")
         score += 1
     else:
+        logger.info("User %s answered question %s incorrectly", message.from_user.id if message.from_user else "unknown", q_id)
         await message.answer("Результат: Неправильна відповідь.")
 
     await state.update_data(q_idx=idx + 1, score=score)
