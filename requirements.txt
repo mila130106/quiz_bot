@@ -1,0 +1,8 @@
+# Telegram Bot Framework
+aiogram>=3.17.0
+
+# AI Integration for Quiz Generation
+g4f
+
+# Environment Variables Management
+python-dotenv>=1.0.0
