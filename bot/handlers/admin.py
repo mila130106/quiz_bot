@@ -8,11 +8,12 @@ from aiogram.filters import Command, StateFilter
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 
-from bot.keyboards import get_main_menu, get_remove_keyboard
+from bot.keyboards import get_main_menu, get_remove_keyboard, get_question_count_keyboard
 from bot.states import QuizForm
 from bot.utils import is_admin
+from services.ai_service import generate_quiz_ai
 from services import (
-    generate_quiz_ai, save_quiz_to_db, get_user_role,
+    save_quiz_to_db, get_user_role,
     set_user_role, register_user, get_all_users, delete_quiz
 )
 from config import ADMIN_ID
@@ -36,19 +37,43 @@ async def start_ai_gen(message: Message, state: FSMContext):
 
 @router.message(QuizForm.waiting_for_topic)
 async def handle_topic(message: Message, state: FSMContext):
-    """Handler for processing quiz topic and generating quiz"""
+    """Handler for receiving topic — saves it and asks for question count"""
     topic = message.text
-    logger.info("Admin %s requested AI quiz for topic: %s", message.from_user.id if message.from_user else "unknown", topic)
-    msg = await message.answer(f"Запит даних для теми: {topic}...")
+    if not topic or not topic.strip():
+        await message.answer("Будь ласка, введіть тему квізу.")
+        return
+    logger.info("Admin %s entered topic: %s", message.from_user.id if message.from_user else "unknown", topic)
+    await state.update_data(topic=topic.strip())
+    await message.answer(
+        f"Тема: <b>{topic.strip()}</b>\n\nОберіть кількість питань:",
+        reply_markup=get_question_count_keyboard(),
+        parse_mode="HTML"
+    )
+    await state.set_state(QuizForm.waiting_for_question_count)
 
-    quiz_data = generate_quiz_ai(topic)
+
+@router.message(QuizForm.waiting_for_question_count)
+async def handle_question_count(message: Message, state: FSMContext):
+    """Handler for receiving question count and generating quiz"""
+    text = (message.text or "").strip()
+    if not text.isdigit() or int(text) < 1 or int(text) > 50:
+        await message.answer("Будь ласка, оберіть кількість питань з клавіатури або введіть число від 1 до 50.")
+        return
+
+    count = int(text)
+    data = await state.get_data()
+    topic = data.get("topic", "")
+    logger.info("Admin %s requested AI quiz for topic '%s' with %d questions", message.from_user.id if message.from_user else "unknown", topic, count)
+    await message.answer(f"Генеруємо {count} питань для теми: {topic}...", reply_markup=get_remove_keyboard())
+
+    quiz_data = await generate_quiz_ai(topic, count)
     if quiz_data:
         save_quiz_to_db(topic, quiz_data)
-        logger.info("AI quiz saved for topic: %s", topic)
-        await msg.edit_text(f"Статус: Контент для '{topic}' збережено. Доступ через /list.")
+        logger.info("AI quiz saved for topic: %s (%d questions)", topic, len(quiz_data))
+        await message.answer(f"Готово! Збережено {len(quiz_data)} питань для '{topic}'. Доступ через /list.")
     else:
         logger.error("AI quiz generation failed for topic: %s", topic)
-        await msg.edit_text("Помилка: AI сервіс недоступний.")
+        await message.answer("Помилка: AI сервіс недоступний.")
 
     await state.clear()
     user_is_admin = is_admin(message.from_user.id) if message.from_user else False

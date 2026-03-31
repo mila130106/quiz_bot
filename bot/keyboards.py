@@ -18,6 +18,15 @@ def get_remove_keyboard():
     return ReplyKeyboardRemove()
 
 
+def get_question_count_keyboard():
+    """Generate keyboard for selecting number of questions"""
+    keyboard = [
+        [KeyboardButton(text="3"), KeyboardButton(text="5"), KeyboardButton(text="10")],
+        [KeyboardButton(text="15"), KeyboardButton(text="20")],
+    ]
+    return ReplyKeyboardMarkup(keyboard=keyboard, resize_keyboard=True, one_time_keyboard=True)
+
+
 def get_quiz_options_keyboard(options):
     """Generate keyboard with quiz answer options"""
     keyboard = [[KeyboardButton(text=opt[0])] for opt in options]
