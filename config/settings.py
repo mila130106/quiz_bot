@@ -13,6 +13,9 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 _admin_id_raw = os.getenv("ADMIN_ID")
 ADMIN_ID = int(_admin_id_raw) if _admin_id_raw else None
 
+# OpenAI configuration
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
 # Database configuration
 DATABASE_PATH = "quiz_system.db"
 
@@ -21,3 +24,5 @@ if not TELEGRAM_BOT_TOKEN:
     raise ValueError("TELEGRAM_BOT_TOKEN not found in .env file")
 if not ADMIN_ID:
     raise ValueError("ADMIN_ID not found in .env file")
+if not OPENAI_API_KEY:
+    raise ValueError("OPENAI_API_KEY not found in .env file")
