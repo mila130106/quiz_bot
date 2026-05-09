@@ -35,10 +35,18 @@ def _parse_response(text: str) -> list:
 
 async def generate_quiz_ai(topic, count):
     prompt = (
+<<<<<<< HEAD
         f"Згенеруй професійний квіз про '{topic}' українською мовою. "
         f"Поверни ТІЛЬКИ JSON масив: "
         f"[{{\"question\": \"...\", \"options\": [\"A\", \"B\", \"C\", \"D\"], \"answer\": \"A\"}}]. "
         f"Рівно {count} питань. Відповіді мають бути короткими та зрозумілими українською."
+=======
+        f"Згенеруй професійний IT квіз про '{topic}' українською мовою.\n"
+        f"ВАЖЛИВО: Поверни РІВНО {count} питань, не більше і не менше!\n"
+        f"Формат: JSON масив без додаткового тексту:\n"
+        f"[{{\"question\": \"...\", \"options\": [\"A\", \"B\", \"C\", \"D\"], \"answer\": \"A\"}}]\n"
+        f"Кількість елементів у масиві: {count}. Відповіді короткі українською."
+>>>>>>> c9b635a75dc234a3267d2c89df65ff8241fbc1ae
     )
 
     logger.info("[AI] Starting generation: topic='%s', count=%d", topic, count)
